@@ -1,10 +1,11 @@
+#pragma once
 #include<iostream>
 using namespace std;
 
 class node{
 public:
     char c;
-    int f;
+    int f;  // frequency
     node* left;
     node* right;
     node():left(nullptr),right(nullptr){c='\0';}
