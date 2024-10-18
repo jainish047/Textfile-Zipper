@@ -7,37 +7,43 @@ using namespace std;
 
 // node* Root;     // Global variable
 
-vector<pair<vector<bool>, char>>& traverse(node* root, vector<pair<vector<bool>, char>>& v, vector<bool> a){
-    if(root->c=='\0'){
-        // cout<<root->f<<endl;
-        a.push_back(false);
-        v=traverse(root->left, v, a);
-        a.pop_back();
-        a.push_back(true);
-        v=traverse(root->right, v, a);
+void traverseForHuffmanTable(node* node, unordered_map<char, string>& map, string s = ""){
+    if(node->left==nullptr && node->right==nullptr){
+        map[node->c]=s;
+        return;
     }
-    else
-        v.push_back(make_pair(a, root->c));
-    return v;
+    s.push_back('0');
+    traverseForHuffmanTable(node->left, map, s);
+    s.pop_back();
+    s.push_back('1');
+    traverseForHuffmanTable(node->right, map, s);
 }
 
-vector<bool> HuffmanCode(string s)
-{
-// finding frequency vector
-    vector<int> f(95, 0);
-    for(int i=0; i<s.length(); i++)
-        f[s[i]-32]++;
+void traverse(node* node, string& ans){
+    if(node->left==nullptr && node->right==nullptr){
+        ans.push_back(node->c);
+        return;
+    }
+    ans.push_back('*');
+    traverse(node->left, ans);
+    traverse(node->right, ans);
+}
 
-// storing non-zero frequency character to priority queue
-    priority_queue<node, vector<node>, greater<node>> pq;
-    for(int i=0; i<f.size(); i++){
-        if(f[i]!=0){
-            node* n1=new node(char(32+i), f[i]);
-            pq.push(*n1);
-        }
+pair<string, string> HuffmanCode(string s){
+    // finding frequency vector
+    unordered_map<char, int> f;
+    for(char&c:s){
+        if(f.find(c)==f.end())  f[c]=1;
+        else                    f[c]++;
     }
 
-// converting priority queue into tree
+    // storing character to priority queue
+    priority_queue<node, vector<node>, greater<node>> pq;
+    for(auto&p:f){
+        pq.push(*(new node(p.first, p.second)));
+    }
+
+    // converting priority queue into tree
     while(pq.size()!=1){
         node* a=new node(pq.top().c, pq.top().f);
         a->left=pq.top().left;
@@ -64,52 +70,32 @@ vector<bool> HuffmanCode(string s)
     pq.pop();
     node* Root=&root;
 
-    // traverse_hufftree(Root);
-    vector<pair<vector<bool>, char>> a;
-    vector<bool> v;
-    vector<pair<vector<bool>, char>>& b=traverse(Root, a, v);
-    
-    cout<<"Huffman Table: "<<endl;
-    for(int i=0; i<b.size(); i++){
-        cout<<"'"<<b[i].second<<"'    ";
-        for(int j=0; j<b[i].first.size(); j++)      cout<<b[i].first[j];
-        cout<<endl;
+    // traverse hufftree
+
+    // generate huffman table
+    unordered_map<char, string> map;
+    traverseForHuffmanTable(Root, map);
+    cout<<"Huffman Table:"<<endl;
+    for(auto&p:map){
+        cout<<"'"<<p.first<<"'\t"<<f[p.first]<<"\t"<<p.second<<endl;
     }
     cout<<endl;
 
-// Encoded string from huffman table
-    vector<bool> w;
-
-    for(int i=0; i<s.length(); i++){
-        for(int j=0; j<b.size(); j++){
-            if(s[i]==b[j].second){
-                for(int k=0; k<b[j].first.size(); k++){
-                    w.push_back(b[j].first[k]);
-                }
-            }
-        }
-    }
-
-    cout<<"\nEncoded: "<<endl;
-    for(int i=0; i<w.size(); i++)
-        cout<<w[i];
-
-// Decoding huffman code to string
-    cout<<"\n\nDecoded: "<<endl;
-    string ss;
-    node* r=Root;
-    for(int i=0; i<w.size(); i++){
-        if(w[i]==false){
-            r=r->left;
-        }
+    string encode;
+    for(char&c:s)   encode+=map[c];
+    
+    // generate treeString
+    string treeString;
+    traverse(Root, treeString);
+    string temp=treeString;
+    treeString="";
+    for(char&c:temp){
+        if(c=='*')  treeString.push_back('0');
         else{
-            r=r->right;
-        }
-        if(r->c!='\0'){
-            ss.push_back(r->c);
-            r=Root;
+            treeString.push_back('1');
+            treeString.push_back(c);
         }
     }
 
-    cout<<ss;
+    return make_pair(treeString, encode);
 }
